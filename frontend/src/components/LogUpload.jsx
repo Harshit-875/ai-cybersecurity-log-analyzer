@@ -28,9 +28,22 @@ function LogUpload({ onAnalysisComplete }) {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/analyze', {
-        logs: logText
-      });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login first');
+        return;
+      }
+
+      const response = await axios.post(
+        'http://localhost:5000/api/analyze',
+        { logs: logText },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
       if (response.data.status === 'success') {
         toast.success('Analysis complete!');
@@ -40,10 +53,15 @@ function LogUpload({ onAnalysisComplete }) {
       }
     } catch (error) {
       console.error('Analysis error:', error);
-      if (error.code === 'ECONNREFUSED') {
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        window.location.reload();
+      } else if (error.code === 'ECONNREFUSED') {
         toast.error('Backend not running. Please start Flask server.');
       } else {
-        toast.error('Error analyzing logs. Check console for details.');
+        toast.error(error.response?.data?.error || 'Error analyzing logs');
       }
     } finally {
       setLoading(false);

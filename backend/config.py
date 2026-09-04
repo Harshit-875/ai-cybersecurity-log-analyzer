@@ -30,7 +30,7 @@ class Config:
     PORT_SCAN_THRESHOLD = int(os.getenv('PORT_SCAN_THRESHOLD', 5))
     
     # JWT Configuration
-    JWT_SECRET = os.getenv('JWT_SECRET', 'jwt-secret-change-in-production')
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     JWT_EXPIRATION_HOURS = int(os.getenv('JWT_EXPIRATION_HOURS', 24))
     
     # CORS Configuration

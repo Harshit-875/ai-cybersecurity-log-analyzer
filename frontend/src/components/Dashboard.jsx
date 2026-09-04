@@ -1,22 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const COLORS = ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981'];
 
-function Dashboard({ data }) {
-  const stats = data || {};
-  const threatData = stats.threat_types || {};
-  const severityData = stats.severity_breakdown || {};
-  
+function Dashboard() {
+  const [stats, setStats] = useState({
+    total_logs_analyzed: 0,
+    suspicious_events: 0,
+    threat_types: {},
+    severity_breakdown: { Critical: 0, High: 0, Medium: 0, Low: 0 },
+    recent_threats: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStatistics();
+  }, []);
+
+  const fetchStatistics = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get('http://localhost:5000/api/stats/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      toast.error('Failed to load statistics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   // Prepare data for charts
-  const threatChartData = Object.keys(threatData).map(key => ({
+  const threatChartData = Object.keys(stats.threat_types || {}).map(key => ({
     name: key,
-    value: threatData[key]
+    value: stats.threat_types[key]
   }));
 
-  const severityChartData = Object.keys(severityData).map(key => ({
+  const severityChartData = Object.keys(stats.severity_breakdown || {}).map(key => ({
     name: key,
-    value: severityData[key]
+    value: stats.severity_breakdown[key]
   }));
 
   return (
@@ -47,7 +87,7 @@ function Dashboard({ data }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Critical Threats</p>
-              <p className="text-3xl font-bold text-red-700">{severityData.Critical || 0}</p>
+              <p className="text-3xl font-bold text-red-700">{stats.severity_breakdown?.Critical || 0}</p>
             </div>
             <div className="text-4xl">⚠️</div>
           </div>
@@ -88,7 +128,7 @@ function Dashboard({ data }) {
 
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold mb-4">Severity Distribution</h3>
-          {severityChartData.length > 0 ? (
+          {severityChartData.length > 0 && severityChartData.some(d => d.value > 0) ? (
             <PieChart width={400} height={300}>
               <Pie
                 data={severityChartData}

@@ -28,7 +28,7 @@ function LogUpload({ onAnalysisComplete }) {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       if (!token) {
         toast.error('Please login first');
         return;
@@ -55,7 +55,7 @@ function LogUpload({ onAnalysisComplete }) {
       console.error('Analysis error:', error);
       if (error.response?.status === 401) {
         toast.error('Session expired. Please login again.');
-        localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
         localStorage.removeItem('username');
         window.location.reload();
       } else if (error.code === 'ECONNREFUSED') {

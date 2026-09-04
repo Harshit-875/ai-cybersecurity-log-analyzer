@@ -24,7 +24,7 @@ mongo = MongoDB()
 @app.before_request
 def before_request():
     """Ensure MongoDB connection is established before each request"""
-    if not mongo.db:
+    if mongo.db is None:
         mongo.connect()
 
 @app.route('/health')

@@ -72,7 +72,7 @@ class MongoDB:
         """Get a collection by name"""
         if self.db is None:
             self.connect()
-        return self.db[name] if self.db else None
+        return self.db[name] if self.db is not None else None
     
     def is_connected(self):
         """Check if MongoDB is connected"""
